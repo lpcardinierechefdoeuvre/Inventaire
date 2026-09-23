@@ -239,22 +239,22 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
   import {
-    getFirestore, collection, getDocs, setDoc, deleteDoc, doc
+    getFirestore, collection, onSnapshot, setDoc, deleteDoc, doc
   } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
   // REMPLACER ces valeurs par celles de votre projet Firebase.
   window.FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDYeX53PxBtloAJQ5lX5iKCW_W7eSOFuFk",
-  authDomain: "inventaire215.firebaseapp.com",
-  projectId: "inventaire215",
-  storageBucket: "inventaire215.firebasestorage.app",
-  messagingSenderId: "623172435265",
-  appId: "1:623172435265:web:0a1163c4c8efddb030b5c0",
-
+    apiKey: "AIzaSyDYeX53PxBtloAJQ5lX5iKCW_W7eSOFuFk",
+    authDomain: "inventaire215.firebaseapp.com",
+    projectId: "inventaire215",
+    storageBucket: "inventaire215.firebasestorage.app",
+    messagingSenderId: "623172435265",
+    appId: "1:623172435265:web:0a1163c4c8efddb030b5c0",
+    measurementId: "G-H9WPKRLKXS"
   };
 
   try {
-    if (window.FIREBASE_CONFIG.apiKey.startsWith("VOTRE_")) throw new Error("Firebase non configuré");
+    if (!window.FIREBASE_CONFIG.apiKey || window.FIREBASE_CONFIG.apiKey.startsWith("VOTRE_")) throw new Error("Firebase non configuré");
     const app = initializeApp(window.FIREBASE_CONFIG);
     window.db = getFirestore(app);
     window.firebaseReady = true;
@@ -266,10 +266,25 @@
   }
 
   window.firebaseApi = {
-    async load() {
-      if (!window.firebaseReady) return null;
-      const snap = await getDocs(collection(window.db, "inventaire"));
-      return snap.docs.map(d => ({ ...d.data(), id: Number(d.id) }));
+    startRealtime() {
+      if (!window.firebaseReady) return;
+      // Écoute temps réel : ajout, modification et suppression sont
+      // immédiatement propagés à tous les navigateurs connectés.
+      return onSnapshot(collection(window.db, "inventaire"), (snapshot) => {
+        data = snapshot.docs.map(d => ({ ...d.data(), id: Number(d.id) }));
+        nextId = data.length ? Math.max(...data.map(d => Number(d.id)||0), 99) + 1 : 100;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        buildFilters();
+        applyFilters();
+        const status = document.getElementById("firebaseStatus");
+        status.textContent = "Firebase : synchronisé en direct";
+        status.classList.add("ok");
+      }, (error) => {
+        console.error("Firebase realtime:", error);
+        const status = document.getElementById("firebaseStatus");
+        status.textContent = "Firebase : erreur de synchronisation";
+        status.classList.remove("ok");
+      });
     },
     async upsert(item) {
       if (!window.firebaseReady) return;
@@ -434,24 +449,19 @@ let nextId = 100;
 
 async function load() {
   try {
-    const remote = await window.firebaseApi?.load();
-    if (Array.isArray(remote) && remote.length) {
-      data = remote;
-    } else {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      data = raw ? JSON.parse(raw) : defaultData;
-      if (!raw) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      if (window.firebaseReady) {
-        await Promise.all(data.map(item => window.firebaseApi.upsert(item)));
-      }
-    }
-  } catch (e) {
-    console.error("Firebase load:", e);
     const raw = localStorage.getItem(STORAGE_KEY);
     data = raw ? JSON.parse(raw) : defaultData;
+  } catch (e) {
+    data = defaultData;
   }
+
   nextId = data.length ? Math.max(...data.map(d=>Number(d.id)||0), 99)+1 : 100;
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+
+  if (window.firebaseReady) {
+    window.firebaseApi.startRealtime();
+  } else {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }
 }
 function save() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
@@ -604,7 +614,7 @@ function openEditModal(id) {
 function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
 document.getElementById('modalBg').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
 
-function saveItem() {
+async function saveItem() {
   const addr = document.getElementById('fAddr').value.trim();
   const ref  = document.getElementById('fRef').value.trim();
   const design = document.getElementById('fDesign').value.trim();
@@ -623,7 +633,13 @@ function saveItem() {
   if (editId) { const idx = data.findIndex(d=>d.id===editId); if (idx>=0) data[idx]=item; }
   else data.push(item);
   save();
-  window.firebaseApi?.upsert(item).catch(err => console.error("Firebase save:", err));
+  try {
+    await window.firebaseApi?.upsert(item);
+  } catch (err) {
+    console.error("Firebase save:", err);
+    alert("Impossible de synchroniser avec Firebase. Vérifiez votre connexion.");
+    return;
+  }
   buildFilters(); applyFilters(); closeModal();
 }
 
@@ -635,7 +651,10 @@ document.getElementById('tableBody').addEventListener('dblclick', e => {
   if (confirm('Supprimer cet article ?')) {
     data = data.filter(d=>d.id!==id);
     save();
-    window.firebaseApi?.remove(id).catch(err => console.error("Firebase delete:", err));
+    window.firebaseApi?.remove(id).catch(err => {
+      console.error("Firebase delete:", err);
+      alert("La suppression n'a pas pu être synchronisée avec Firebase.");
+    });
     buildFilters(); applyFilters();
   }
 });
