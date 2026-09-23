@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inventaire Général – Magasin</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --blue: #1565C0;
+    --blue-dark: #0D47A1;
+    --blue-light: #E3F0FF;
+    --blue-mid: #1976D2;
+    --row-alt: #EAF3FF;
+    --border: #B0C4DE;
+    --text: #1a2a3a;
+    --text-muted: #5a6a7a;
+    --green: #1B5E20;
+    --green-bg: #E8F5E9;
+    --red: #B71C1C;
+    --red-bg: #FFEBEE;
+    --amber: #E65100;
+    --amber-bg: #FFF3E0;
+    --bg: #F5F8FF;
+    --card: #fff;
+    --shadow: 0 2px 12px rgba(21,101,192,0.09);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+    color: white;
+    padding: 1.2rem 2rem;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 3px 16px rgba(13,71,161,0.25);
+  }
+  header h1 {
+    font-size: 1.25rem; font-weight: 600; letter-spacing: 0.02em;
+    display: flex; align-items: center; gap: 0.6rem;
+  }
+  header h1 span.badge {
+    background: rgba(255,255,255,0.18); border-radius: 6px;
+    font-size: 0.75rem; padding: 2px 10px; font-weight: 500; letter-spacing: 0.06em;
+  }
+  .header-actions { display: flex; gap: 0.5rem; }
+  .btn {
+    font-family: inherit; font-size: 0.82rem; font-weight: 500;
+    border-radius: 6px; padding: 0.45rem 1rem; cursor: pointer;
+    transition: all 0.15s; border: 1.5px solid transparent;
+    display: inline-flex; align-items: center; gap: 0.4rem;
+  }
+  .btn-white { background: white; color: var(--blue-dark); border-color: white; }
+  .btn-white:hover { background: var(--blue-light); }
+  .btn-outline { background: rgba(255,255,255,0.12); color: white; border-color: rgba(255,255,255,0.45); }
+  .btn-outline:hover { background: rgba(255,255,255,0.22); }
+  .btn-blue { background: var(--blue); color: white; }
+  .btn-blue:hover { background: var(--blue-dark); }
+  .btn-green { background: #2E7D32; color: white; }
+  .btn-green:hover { background: var(--green); }
+  .btn-red { background: #C62828; color: white; font-size: 0.78rem; padding: 0.3rem 0.7rem; }
+  .btn-red:hover { background: var(--red); }
+  .btn-sm { padding: 0.28rem 0.65rem; font-size: 0.78rem; }
+
+  /* TOOLBAR */
+  .toolbar {
+    background: var(--card); border-bottom: 1px solid var(--border);
+    padding: 0.75rem 2rem;
+    display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+  .toolbar input[type=text], .toolbar select {
+    font-family: inherit; font-size: 0.85rem;
+    border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 0.42rem 0.85rem; background: var(--bg); color: var(--text);
+    outline: none; transition: border 0.15s;
+  }
+  .toolbar input[type=text] { min-width: 220px; }
+  .toolbar input[type=text]:focus, .toolbar select:focus { border-color: var(--blue-mid); }
+  .toolbar select { min-width: 130px; }
+  .sep { width: 1px; height: 22px; background: var(--border); }
+  .stat-pill {
+    font-size: 0.78rem; font-weight: 500; padding: 3px 12px;
+    border-radius: 20px; background: var(--blue-light); color: var(--blue-dark);
+    border: 1px solid var(--border);
+  }
+  .stat-pill.warning { background: var(--amber-bg); color: var(--amber); border-color: #FFCC80; }
+  .stat-pill.ok { background: var(--green-bg); color: var(--green); border-color: #A5D6A7; }
+
+  /* STATS BAR */
+  .stats-bar {
+    padding: 0.6rem 2rem;
+    display: flex; gap: 1rem; flex-wrap: wrap;
+  }
+  .stat-card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: 8px; padding: 0.5rem 1.1rem;
+    display: flex; align-items: center; gap: 0.55rem;
+    box-shadow: var(--shadow); font-size: 0.83rem;
+  }
+  .stat-card .val { font-weight: 600; font-size: 1.05rem; color: var(--blue-dark); font-family: 'IBM Plex Mono', monospace; }
+  .stat-card .lbl { color: var(--text-muted); font-size: 0.75rem; }
+
+  /* TABLE */
+  .table-wrap {
+    margin: 0 2rem 2rem;
+    background: var(--card);
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  table {
+    width: 100%; border-collapse: collapse;
+    font-size: 0.82rem;
+  }
+  thead tr {
+    background: linear-gradient(90deg, var(--blue-dark) 0%, var(--blue-mid) 100%);
+    color: white;
+  }
+  thead th {
+    padding: 0.65rem 0.7rem; font-weight: 500; text-align: left;
+    white-space: nowrap; cursor: pointer; user-select: none;
+    letter-spacing: 0.01em;
+  }
+  thead th:hover { background: rgba(255,255,255,0.12); }
+  thead th.sorted-asc::after { content: ' ▲'; font-size: 0.65em; opacity: 0.8; }
+  thead th.sorted-desc::after { content: ' ▼'; font-size: 0.65em; opacity: 0.8; }
+  tbody tr { border-bottom: 1px solid #dde7f4; }
+  tbody tr:nth-child(even) { background: var(--row-alt); }
+  tbody tr:hover { background: #d0e6ff; }
+  tbody tr.selected { background: #c8deff !important; outline: 2px solid var(--blue); outline-offset: -2px; }
+  td {
+    padding: 0.5rem 0.7rem; vertical-align: middle;
+  }
+  td input[type=text], td input[type=number] {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem;
+    border: 1.5px solid var(--border); border-radius: 5px;
+    padding: 0.2rem 0.45rem; width: 100%; background: white;
+    outline: none;
+  }
+  td input:focus { border-color: var(--blue-mid); }
+  .col-addr { width: 60px; font-family: 'IBM Plex Mono', monospace; font-weight: 500; color: var(--blue-dark); }
+  .col-ref { width: 80px; font-family: 'IBM Plex Mono', monospace; }
+  .col-design { min-width: 160px; }
+  .col-marque { width: 90px; }
+  .col-type { width: 70px; }
+  .col-qty { width: 80px; text-align: center; }
+  .col-prix { width: 100px; text-align: right; font-family: 'IBM Plex Mono', monospace; }
+  .col-valeur { width: 110px; text-align: right; font-family: 'IBM Plex Mono', monospace; font-weight: 500; }
+  .col-obs { min-width: 120px; }
+  .col-actions { width: 55px; text-align: center; }
+  .badge-addr {
+    display: inline-block; background: var(--blue-light); color: var(--blue-dark);
+    border-radius: 5px; padding: 2px 8px; font-weight: 600; font-size: 0.78rem;
+    border: 1px solid #90BBEE;
+  }
+  .badge-type {
+    display: inline-block; font-size: 0.73rem; padding: 1px 7px;
+    border-radius: 10px; background: #EDE7F6; color: #4527A0;
+    text-transform: lowercase;
+  }
+  .qty-0 { color: var(--red); font-weight: 600; }
+  .qty-low { color: var(--amber); font-weight: 600; }
+  .qty-ok { color: var(--green); font-weight: 500; }
+  .prix-empty { color: #aaa; font-style: italic; }
+  tfoot tr { background: #D0E4FA; }
+  tfoot td { font-weight: 600; font-size: 0.82rem; padding: 0.55rem 0.7rem; border-top: 2px solid var(--blue); }
+
+  /* MODAL */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(10,30,70,0.45); z-index: 100;
+    align-items: center; justify-content: center;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: white; border-radius: 12px; padding: 1.8rem 2rem;
+    width: 520px; max-width: 96vw; box-shadow: 0 8px 40px rgba(13,71,161,0.22);
+    border: 1px solid var(--border);
+  }
+  .modal h2 { font-size: 1.05rem; color: var(--blue-dark); margin-bottom: 1.2rem; font-weight: 600; }
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem 1rem; }
+  .form-group { display: flex; flex-direction: column; gap: 0.3rem; }
+  .form-group.full { grid-column: 1/-1; }
+  label { font-size: 0.78rem; font-weight: 500; color: var(--text-muted); }
+  .form-group input, .form-group select, .form-group textarea {
+    font-family: inherit; font-size: 0.85rem;
+    border: 1.5px solid var(--border); border-radius: 6px;
+    padding: 0.45rem 0.75rem; background: var(--bg); color: var(--text);
+    outline: none;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--blue-mid); }
+  .modal-actions { margin-top: 1.4rem; display: flex; gap: 0.6rem; justify-content: flex-end; }
+
+  /* IMPORT */
+  .import-area {
+    border: 2px dashed var(--border); border-radius: 8px;
+    padding: 1.5rem; text-align: center; color: var(--text-muted);
+    font-size: 0.85rem; cursor: pointer;
+    transition: border-color 0.2s;
+    grid-column: 1/-1;
+  }
+  .import-area:hover { border-color: var(--blue); color: var(--blue); }
+
+  /* FOOTER */
+  footer {
+    text-align: center; font-size: 0.72rem; color: var(--text-muted);
+    padding: 1rem; border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 900px) {
+    .table-wrap { margin: 0 0.5rem 1.5rem; overflow-x: auto; }
+    .toolbar, .stats-bar { padding: 0.7rem 0.75rem; }
+    header { padding: 0.9rem 1rem; }
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:none; } }
+  tbody tr { animation: fadeIn 0.18s ease; }
+</style>
+
+<style>
+  @media print {
+    header .header-actions, .toolbar, .modal-bg, .col-actions, footer { display:none !important; }
+    body { background:#fff; }
+    .stats-bar { padding: .5rem 0; }
+    .table-wrap { margin:0; border:0; box-shadow:none; }
+    table { font-size:10px; }
+  }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getFirestore, collection, getDocs, setDoc, deleteDoc, doc
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+  // REMPLACER ces valeurs par celles de votre projet Firebase.
+  window.FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDYeX53PxBtloAJQ5lX5iKCW_W7eSOFuFk",
+  authDomain: "inventaire215.firebaseapp.com",
+  projectId: "inventaire215",
+  storageBucket: "inventaire215.firebasestorage.app",
+  messagingSenderId: "623172435265",
+  appId: "1:623172435265:web:0a1163c4c8efddb030b5c0",
+
+  };
+
+  try {
+    if (window.FIREBASE_CONFIG.apiKey.startsWith("VOTRE_")) throw new Error("Firebase non configuré");
+    const app = initializeApp(window.FIREBASE_CONFIG);
+    window.db = getFirestore(app);
+    window.firebaseReady = true;
+    document.getElementById("firebaseStatus").textContent = "Firebase : connecté";
+    document.getElementById("firebaseStatus").classList.add("ok");
+  } catch (e) {
+    window.firebaseReady = false;
+    document.getElementById("firebaseStatus").textContent = "Firebase : à configurer";
+  }
+
+  window.firebaseApi = {
+    async load() {
+      if (!window.firebaseReady) return null;
+      const snap = await getDocs(collection(window.db, "inventaire"));
+      return snap.docs.map(d => ({ ...d.data(), id: Number(d.id) }));
+    },
+    async upsert(item) {
+      if (!window.firebaseReady) return;
+      await setDoc(doc(window.db, "inventaire", String(item.id)), item);
+    },
+    async remove(id) {
+      if (!window.firebaseReady) return;
+      await deleteDoc(doc(window.db, "inventaire", String(id)));
+    }
+  };
+</script>
+
+</head>
+<body>
+
+<header>
+  <h1>
+    📦 Inventaire Général – Magasin
+    
+  </h1>
+  <div class="header-actions">
+    <button class="btn btn-outline" onclick="exportCSV()">⬇ CSV</button>
+    <button class="btn btn-outline" onclick="exportExcel()">📊 Excel</button>
+    <button class="btn btn-outline" onclick="exportJSON()">🧩 JSON</button>
+    <button class="btn btn-outline" onclick="exportPDF()">📄 PDF</button>
+    <button class="btn btn-outline" onclick="window.print()">🖨️ Imprimer</button>
+    <button class="btn btn-white" onclick="openAddModal()">+ Ajouter un article</button>
+  </div>
+</header>
+
+<div class="toolbar">
+  <input type="text" id="searchInput" placeholder="🔍  Rechercher (désignation, marque, référence…)" oninput="applyFilters()">
+  <select id="filterAddr" onchange="applyFilters()">
+    <option value="">Toutes adresses</option>
+  </select>
+  <select id="filterMarque" onchange="applyFilters()">
+    <option value="">Toutes marques</option>
+  </select>
+  <select id="filterType" onchange="applyFilters()">
+    <option value="">Tous types UC</option>
+  </select>
+  <div class="sep"></div>
+  <span class="stat-pill" id="countPill">0 articles</span>
+  <span class="stat-pill warning" id="missingPill">— sans prix</span>
+  <span class="stat-pill" id="firebaseStatus">Firebase : connexion…</span>
+</div>
+
+<div class="stats-bar">
+  <div class="stat-card"><div><div class="lbl">Articles total</div><div class="val" id="statTotal">—</div></div></div>
+  <div class="stat-card"><div><div class="lbl">Qté totale</div><div class="val" id="statQty">—</div></div></div>
+  <div class="stat-card"><div><div class="lbl">Valeur totale HT</div><div class="val" id="statValeur">—</div></div></div>
+  <div class="stat-card"><div><div class="lbl">Adresses actives</div><div class="val" id="statAddr">—</div></div></div>
+</div>
+
+<div class="table-wrap">
+  <table id="mainTable">
+    <thead>
+      <tr>
+        <th onclick="sortTable('adresse')" class="col-addr">Adresse</th>
+        <th onclick="sortTable('reference')" class="col-ref">Référence</th>
+        <th onclick="sortTable('designation')" class="col-design">Désignation</th>
+        <th onclick="sortTable('marque')" class="col-marque">Marque</th>
+        <th onclick="sortTable('typeUc')" class="col-type">Type UC</th>
+        <th onclick="sortTable('quantite')" class="col-qty">Qté dispo</th>
+        <th onclick="sortTable('prixUnitaire')" class="col-prix">Prix unit. HT €</th>
+        <th onclick="sortTable('valeurTotale')" class="col-valeur">Valeur totale €</th>
+        <th class="col-obs">Observations</th>
+        <th class="col-actions"></th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+    <tfoot id="tableFoot"></tfoot>
+  </table>
+</div>
+
+<!-- MODAL AJOUT / ÉDITION -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal">
+    <h2 id="modalTitle">Nouvel article</h2>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>Adresse</label>
+        <input id="fAddr" type="text" placeholder="ex: B32">
+      </div>
+      <div class="form-group">
+        <label>Référence</label>
+        <input id="fRef" type="text" placeholder="ex: 95337">
+      </div>
+      <div class="form-group full">
+        <label>Désignation</label>
+        <input id="fDesign" type="text" placeholder="ex: Feuilles blanches A4">
+      </div>
+      <div class="form-group">
+        <label>Marque</label>
+        <input id="fMarque" type="text" placeholder="ex: HP">
+      </div>
+      <div class="form-group">
+        <label>Type UC</label>
+        <select id="fType">
+          <option>Carton</option>
+          <option>carton</option>
+          <option>Boîte</option>
+          <option>Unité</option>
+          <option>Lot</option>
+          <option>Sachet</option>
+          <option>Autre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Quantité disponible</label>
+        <input id="fQty" type="number" min="0" placeholder="1">
+      </div>
+      <div class="form-group">
+        <label>Prix unitaire HT (€)</label>
+        <input id="fPrix" type="number" min="0" step="0.01" placeholder="0.00">
+      </div>
+      <div class="form-group full">
+        <label>Observations</label>
+        <input id="fObs" type="text" placeholder="Notes éventuelles…">
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" style="color:#555;border-color:#ccc;" onclick="closeModal()">Annuler</button>
+      <button class="btn btn-blue" onclick="saveItem()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<footer>Inventaire Général Magasin — données synchronisées avec Firebase Firestore</footer>
+
+<script>
+const STORAGE_KEY = 'inventaire_magasin';
+
+const defaultData = [
+  {id:1, adresse:'B32', reference:'95337',   designation:'Feuilles blanches A4',       marque:'CARDILOG', typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:2, adresse:'B32', reference:'95337',   designation:'Jeuilles blades A4',         marque:'CARDILOG', typeUc:'carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:3, adresse:'B32', reference:'417386',  designation:'Sac blc',                    marque:'Niceday',  typeUc:'carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:4, adresse:'B32', reference:'188964',  designation:'Sachet velin blanc',         marque:'Niceday',  typeUc:'Carton', quantite:2, prixUnitaire:'', observations:''},
+  {id:5, adresse:'B32', reference:'7008',    designation:'Toner Cartridge',            marque:'HP',       typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:6, adresse:'B32', reference:'HP07008', designation:'Toner cartridge',            marque:'HP',       typeUc:'carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:7, adresse:'B32', reference:'3337',    designation:'Toner noir',                 marque:'CANON',    typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:8, adresse:'B33', reference:'206491',  designation:'Cartouche Imprimante',       marque:'HP',       typeUc:'Carton', quantite:7, prixUnitaire:27, observations:''},
+  {id:9, adresse:'B34', reference:'pf030',   designation:'Cartouche imprimante',       marque:'DELL',     typeUc:'carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:10,adresse:'B34', reference:'NF555',   designation:'Cartouche Imprimante Jaune', marque:'DELL',     typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:11,adresse:'B34', reference:'RF013',   designation:'Cartouche Imprimante Magenta',marque:'DELL',    typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:12,adresse:'B34', reference:'PF030',   designation:'Cartouche Imprimante Noir',  marque:'DELL',     typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:13,adresse:'B34', reference:'rf013',   designation:'Cartouche imprimante noire', marque:'DELL',     typeUc:'carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:14,adresse:'B34', reference:'487',     designation:'Cartouche Noir',             marque:'CANON',    typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:15,adresse:'B34', reference:'S-2487E', designation:'Cartouche pour Iprimante',   marque:'RISO',     typeUc:'Carton', quantite:1, prixUnitaire:'', observations:''},
+  {id:16,adresse:'B34', reference:'1204',    designation:'Photo Conductor',            marque:'EPSON',    typeUc:'Carton', quantite:2, prixUnitaire:'', observations:''},
+  {id:17,adresse:'B41', reference:'93983',   designation:'Kit ordinateur',             marque:'LENOVO',   typeUc:'carton', quantite:2, prixUnitaire:'', observations:''},
+  {id:18,adresse:'B41', reference:'720840',  designation:'Sac kraft',                 marque:'SIL FEN',  typeUc:'carton', quantite:3, prixUnitaire:'', observations:''},
+  {id:19,adresse:'B41', reference:'720840',  designation:'Sac Kraft',                 marque:'SIL FEN',  typeUc:'Carton', quantite:3, prixUnitaire:'', observations:''},
+];
+
+let data = [];
+let filtered = [];
+let sortCol = 'adresse';
+let sortDir = 1;
+let editId = null;
+let nextId = 100;
+
+async function load() {
+  try {
+    const remote = await window.firebaseApi?.load();
+    if (Array.isArray(remote) && remote.length) {
+      data = remote;
+    } else {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      data = raw ? JSON.parse(raw) : defaultData;
+      if (!raw) localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      if (window.firebaseReady) {
+        await Promise.all(data.map(item => window.firebaseApi.upsert(item)));
+      }
+    }
+  } catch (e) {
+    console.error("Firebase load:", e);
+    const raw = localStorage.getItem(STORAGE_KEY);
+    data = raw ? JSON.parse(raw) : defaultData;
+  }
+  nextId = data.length ? Math.max(...data.map(d=>Number(d.id)||0), 99)+1 : 100;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+}
+
+function valeurTotale(item) {
+  if (item.prixUnitaire === '' || item.prixUnitaire === null || item.prixUnitaire === undefined) return null;
+  return parseFloat(item.prixUnitaire) * parseInt(item.quantite);
+}
+function fmtEur(v) {
+  if (v === null || v === '') return '<span class="prix-empty">—</span>';
+  return parseFloat(v).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+}
+function qtyClass(q) {
+  if (q == 0) return 'qty-0';
+  if (q <= 2) return 'qty-low';
+  return 'qty-ok';
+}
+
+function buildFilters() {
+  const addrs = [...new Set(data.map(d=>d.adresse))].sort();
+  const marques = [...new Set(data.map(d=>d.marque))].sort();
+  const types = [...new Set(data.map(d=>d.typeUc))].sort();
+  const fa = document.getElementById('filterAddr');
+  const fm = document.getElementById('filterMarque');
+  const ft = document.getElementById('filterType');
+  [fa, fm, ft].forEach(s => { while(s.options.length>1) s.remove(1); });
+  addrs.forEach(a => fa.add(new Option(a,a)));
+  marques.forEach(m => fm.add(new Option(m,m)));
+  types.forEach(t => ft.add(new Option(t,t)));
+}
+
+function applyFilters() {
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  const fa = document.getElementById('filterAddr').value;
+  const fm = document.getElementById('filterMarque').value;
+  const ft = document.getElementById('filterType').value;
+  filtered = data.filter(d => {
+    const matchQ = !q || [d.adresse,d.reference,d.designation,d.marque,d.observations].some(v => String(v).toLowerCase().includes(q));
+    const matchA = !fa || d.adresse === fa;
+    const matchM = !fm || d.marque === fm;
+    const matchT = !ft || d.typeUc === ft;
+    return matchQ && matchA && matchM && matchT;
+  });
+  sortData();
+  renderTable();
+  updateStats();
+}
+
+function sortTable(col) {
+  if (sortCol === col) sortDir *= -1;
+  else { sortCol = col; sortDir = 1; }
+  sortData();
+  renderTable();
+  document.querySelectorAll('thead th').forEach(th => { th.classList.remove('sorted-asc','sorted-desc'); });
+  const cols = ['adresse','reference','designation','marque','typeUc','quantite','prixUnitaire','valeurTotale','observations',''];
+  const idx = cols.indexOf(col);
+  const ths = document.querySelectorAll('thead th');
+  if (ths[idx]) ths[idx].classList.add(sortDir===1?'sorted-asc':'sorted-desc');
+}
+function sortData() {
+  filtered.sort((a,b) => {
+    let av = a[sortCol], bv = b[sortCol];
+    if (sortCol === 'valeurTotale') { av = valeurTotale(a) ?? -1; bv = valeurTotale(b) ?? -1; }
+    if (sortCol === 'quantite' || sortCol === 'prixUnitaire') { av = parseFloat(av)||0; bv = parseFloat(bv)||0; }
+    if (av < bv) return -sortDir; if (av > bv) return sortDir; return 0;
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  filtered.forEach(item => {
+    const vt = valeurTotale(item);
+    const tr = document.createElement('tr');
+    tr.dataset.id = item.id;
+    tr.innerHTML = `
+      <td class="col-addr"><span class="badge-addr">${item.adresse}</span></td>
+      <td class="col-ref">${item.reference}</td>
+      <td class="col-design">${item.designation}</td>
+      <td class="col-marque">${item.marque}</td>
+      <td class="col-type"><span class="badge-type">${item.typeUc}</span></td>
+      <td class="col-qty"><span class="${qtyClass(item.quantite)}">${item.quantite}</span></td>
+      <td class="col-prix">${item.prixUnitaire !== '' ? fmtEur(item.prixUnitaire) : '<span class="prix-empty">—</span>'}</td>
+      <td class="col-valeur">${vt !== null ? fmtEur(vt) : '<span class="prix-empty">— €</span>'}</td>
+      <td class="col-obs" style="color:var(--text-muted);font-size:0.78rem;">${item.observations||''}</td>
+      <td class="col-actions">
+        <button class="btn btn-sm" style="background:var(--blue-light);color:var(--blue-dark);border:1px solid #90BBEE;" onclick="openEditModal(${item.id})" title="Modifier">✏️</button>
+      </td>`;
+    tbody.appendChild(tr);
+  });
+  renderFoot();
+  updatePills();
+}
+
+function renderFoot() {
+  const tfoot = document.getElementById('tableFoot');
+  const totalQty = filtered.reduce((s,d)=>s+parseInt(d.quantite),0);
+  const totalVal = filtered.reduce((s,d)=>{ const v=valeurTotale(d); return s+(v||0); },0);
+  tfoot.innerHTML = `<tr>
+    <td colspan="5" style="text-align:right;color:var(--blue-dark);">TOTAUX</td>
+    <td class="col-qty" style="color:var(--blue-dark);">${totalQty}</td>
+    <td></td>
+    <td class="col-valeur" style="color:var(--blue-dark);">${fmtEur(totalVal)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+}
+
+function updateStats() {
+  document.getElementById('statTotal').textContent = filtered.length;
+  const totalQty = filtered.reduce((s,d)=>s+parseInt(d.quantite),0);
+  document.getElementById('statQty').textContent = totalQty;
+  const totalVal = filtered.reduce((s,d)=>{ const v=valeurTotale(d); return s+(v||0); },0);
+  document.getElementById('statValeur').textContent = fmtEur(totalVal).replace(/<[^>]+>/g,'');
+  const addrs = new Set(filtered.map(d=>d.adresse));
+  document.getElementById('statAddr').textContent = addrs.size;
+}
+function updatePills() {
+  const n = filtered.length;
+  document.getElementById('countPill').textContent = n + ' article' + (n>1?'s':'');
+  const noPrix = filtered.filter(d=>d.prixUnitaire===''||d.prixUnitaire===null).length;
+  document.getElementById('missingPill').textContent = noPrix + ' sans prix';
+}
+
+// MODAL
+function openAddModal() {
+  editId = null;
+  document.getElementById('modalTitle').textContent = 'Nouvel article';
+  ['fAddr','fRef','fDesign','fMarque','fObs'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fQty').value=1;
+  document.getElementById('fPrix').value='';
+  document.getElementById('fType').value='Carton';
+  document.getElementById('modalBg').classList.add('open');
+}
+function openEditModal(id) {
+  const item = data.find(d=>d.id===id);
+  if (!item) return;
+  editId = id;
+  document.getElementById('modalTitle').textContent = 'Modifier l\'article';
+  document.getElementById('fAddr').value = item.adresse;
+  document.getElementById('fRef').value = item.reference;
+  document.getElementById('fDesign').value = item.designation;
+  document.getElementById('fMarque').value = item.marque;
+  document.getElementById('fType').value = item.typeUc;
+  document.getElementById('fQty').value = item.quantite;
+  document.getElementById('fPrix').value = item.prixUnitaire;
+  document.getElementById('fObs').value = item.observations||'';
+  document.getElementById('modalBg').classList.add('open');
+}
+function closeModal() { document.getElementById('modalBg').classList.remove('open'); }
+document.getElementById('modalBg').addEventListener('click', e => { if (e.target===e.currentTarget) closeModal(); });
+
+function saveItem() {
+  const addr = document.getElementById('fAddr').value.trim();
+  const ref  = document.getElementById('fRef').value.trim();
+  const design = document.getElementById('fDesign').value.trim();
+  if (!addr || !design) { alert('Adresse et désignation obligatoires.'); return; }
+  const item = {
+    id: editId || nextId++,
+    adresse: addr,
+    reference: ref,
+    designation: design,
+    marque: document.getElementById('fMarque').value.trim(),
+    typeUc: document.getElementById('fType').value,
+    quantite: parseInt(document.getElementById('fQty').value)||0,
+    prixUnitaire: document.getElementById('fPrix').value !== '' ? parseFloat(document.getElementById('fPrix').value) : '',
+    observations: document.getElementById('fObs').value.trim(),
+  };
+  if (editId) { const idx = data.findIndex(d=>d.id===editId); if (idx>=0) data[idx]=item; }
+  else data.push(item);
+  save();
+  window.firebaseApi?.upsert(item).catch(err => console.error("Firebase save:", err));
+  buildFilters(); applyFilters(); closeModal();
+}
+
+// DELETE via double-click on row
+document.getElementById('tableBody').addEventListener('dblclick', e => {
+  const tr = e.target.closest('tr');
+  if (!tr) return;
+  const id = parseInt(tr.dataset.id);
+  if (confirm('Supprimer cet article ?')) {
+    data = data.filter(d=>d.id!==id);
+    save();
+    window.firebaseApi?.remove(id).catch(err => console.error("Firebase delete:", err));
+    buildFilters(); applyFilters();
+  }
+});
+
+// EXPORT CSV
+function exportCSV() {
+  const cols = ['adresse','reference','designation','marque','typeUc','quantite','prixUnitaire','valeurTotale','observations'];
+  const header = ['Adresse','Référence','Désignation','Marque','Type UC','Quantité','Prix unit. HT','Valeur totale','Observations'];
+  const rows = [header, ...filtered.map(d=>[
+    d.adresse, d.reference, d.designation, d.marque, d.typeUc, d.quantite,
+    d.prixUnitaire!==''?d.prixUnitaire:'',
+    valeurTotale(d)!==null?valeurTotale(d):'',
+    d.observations
+  ])];
+  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url; a.download='inventaire_magasin.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+
+// EXPORT EXCEL
+function exportExcel() {
+  const rows = filtered.map(d => ({
+    "Adresse": d.adresse,
+    "Référence": d.reference,
+    "Désignation": d.designation,
+    "Marque": d.marque,
+    "Type UC": d.typeUc,
+    "Quantité": d.quantite,
+    "Prix unit. HT": d.prixUnitaire === '' ? '' : Number(d.prixUnitaire),
+    "Valeur totale": valeurTotale(d) === null ? '' : valeurTotale(d),
+    "Observations": d.observations
+  }));
+  const ws = XLSX.utils.json_to_sheet(rows);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "Inventaire");
+  XLSX.writeFile(wb, "inventaire_magasin.xlsx");
+}
+
+// EXPORT JSON
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(filtered, null, 2)], {type:'application/json;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'inventaire_magasin.json'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+// EXPORT PDF
+function exportPDF() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({orientation:'landscape', unit:'mm', format:'a4'});
+  doc.setFontSize(14);
+  doc.text("Inventaire Général – Magasin", 14, 14);
+  doc.setFontSize(8);
+  doc.text(`Export du ${new Date().toLocaleString('fr-FR')}`, 14, 20);
+
+  const rows = filtered.map(d => [
+    d.adresse, d.reference, d.designation, d.marque, d.typeUc,
+    d.quantite,
+    d.prixUnitaire === '' ? '—' : `${Number(d.prixUnitaire).toFixed(2)} €`,
+    valeurTotale(d) === null ? '—' : `${valeurTotale(d).toFixed(2)} €`,
+    d.observations || ''
+  ]);
+
+  doc.autoTable({
+    startY: 25,
+    head: [['Adresse','Référence','Désignation','Marque','Type','Qté','Prix HT','Valeur','Observations']],
+    body: rows,
+    styles: {fontSize: 7, cellPadding: 2},
+    headStyles: {fillColor: [21,101,192]},
+    margin: {left: 8, right: 8}
+  });
+
+  doc.save("inventaire_magasin.pdf");
+}
+
+// INIT
+load().then(() => { buildFilters(); applyFilters(); });
+</script>
+</body>
+</html>
